@@ -1,66 +1,86 @@
 #lang racket
-(define-struct node  (timeout timeout-arc arcs) #:transparent #:mutable)
-(define-struct arc (name trigger actions destination) #:transparent)
+(require "user-data.rkt")
 
-(define logging display)
-(define narrate display)
-(define h1 "H1")
-(define h3 "H3")
-(define no-arcs '(()))
+(struct node  (timeout timeout-arc trigger-arcs) #:transparent)
+(struct arc (name trigger actions destination) #:transparent)
+(define no-trigger-arcs '(()))
+
+(define (logging str)
+  (display (string-append "<< " str " >>\n")))
+
+(define (narrate str)
+  (display (string-append "NARRATION: " str)))
+
+(define db (make-hash
+            '((bp .100)
+             (hr . 80)
+             (sat .95)
+             (temp 37.9))))
+(define (db-set! key value)
+  (hash-set! db key value))
+(define (db-get key)
+  (hash-ref db key))
+
+
 
 (define-syntax (define-arc stx)
   (syntax-case stx (do: to:)
-    [(_ ())
+    [(_ #f)
      #' #f]
     [(_ (name trigger do: (actions ...) to: destination))
-     #'(make-arc name trigger (lambda () actions ...) destination)]))
+     #'(arc name trigger (lambda () actions ...) (delay destination))]))
        
 
 (define-syntax (define-node stx)
-  (syntax-case stx (timeout: timeout-arc: other-arcs:)
-    [(_  name timeout: timeout timeout-arc: arc0 other-arcs: (arc1 ...))
-     #'(define name (make-node timeout (define-arc arc0) (list (define-arc arc1)... )))]))
+  (syntax-case stx (timeout: timeout-arc: trigger-arcs:)
+    ; timeout arc, but no trigger arcs
+    [(_  name timeout: timeout timeout-arc: arc0)
+     #'(define name (node timeout (define-arc arc0) #f))]
+    ; no timeout, but trigger arcs
+    [(_  name trigger-arcs: (arc1 ...))
+     #'(define name (node #f #f (list (define-arc arc1)... )))]
+    ; both timeout and trigger arcs
+    [(_  name timeout: timeout timeout-arc: arc0 trigger-arcs: (arc1 ...))
+     #'(define name (node timeout (define-arc arc0) (list (define-arc arc1)... )))]))
 
-
-(define s1 'foo)
-
-
-
-(define-arc ('a1 'trigger do: ((logging "init-mode-timed-out") (narrate h1)) to: s1))
-(define-arc ('a2 'history do: ((logging "history from a2") (narrate h3)) to: s1))
-
-
+;; node with timeout and trigger arcs
 (define-node test-node-1
   timeout: 5
-  timeout-arc: ('a-test 'trig do: ((logging "init-mode-timeout") (narrate h3)) to: s1)
-  other-arcs: (('a1 'exam do:  ((logging "working") (narrate h1)) to: s1)
-         ('a2 'history do: ((logging "history from a2") (narrate h3)) to: s1)))
-
+  timeout-arc: ('a-test 'trig do: ((logging "test-node-1-timeout, going to test-node-2") (narrate h3)) to: test-node-2)
+  trigger-arcs: (('a1 'exam do:  ((logging "got exam, going to test-node-3") (narrate h1)) to: test-node-3)
+               ('a2 'history do: ((logging "got history, looping back to test-node-1") (narrate h3)) to: test-node-1)))
+;; node with no timeout arc and 3 trigger arcs
 (define-node test-node-2
-  timeout: 0
-  timeout-arc: ()
-  other-arcs: (('a1 'exam do:  ((logging "working") (narrate h1)) to: s1)
-         ('a2 'history do: ((logging "history from a2") (narrate h3)) to: s1)))
-
+  trigger-arcs: (('a1 'exam do:  ((logging "got exam, going to test-node-1") (narrate h1)) to: test-node-1)
+               ('a2 'history do: ((logging "got history, looping back to test-node-2") (narrate h3)) to: test-node-2)
+               ('a3 'ix do: ((logging "got ix, going to test-node-3") (narrate h3)) to: test-node-3)))
+;; node with timeout arc and 1 trigger arc
 (define-node test-node-3
-  timeout: 0
-  timeout-arc: ('a-test 'trig do: ((logging "init-mode-timeout") (narrate h3)) to: s1)
-  other-arcs: (('a1 'exam do:  ((logging "working") (narrate h1)) to: s1)))
-         
-
-
+  timeout: 3
+  timeout-arc: ('a-test 'trig do: ((logging "test-node-3-timeout, going to test-node-1") (narrate h3)) to: test-node-1)
+  trigger-arcs: (('a1 'exam do:  ((logging "got exam, going to test-node-2") (narrate h1)) to: test-node-2)))
+;; node with timeout arc and no trigger arcs
+(define-node test-node-4
+  timeout: 8
+  timeout-arc: ('a-test 'trig do: ((logging "test-node-4-timeout, going to test-node-1") (narrate h3)) to: test-node-1))
 
 (define (do-actions arc)
   (let* ((actions (arc-actions arc)))
     (actions)))
 
 
-(let ((arc (second (node-arcs test-node-1))))
+(let ((arc (second (node-trigger-arcs test-node-1))))
   (do-actions arc))
 
-(let ((arc (second (node-arcs test-node-2))))
+(let ((arc (third (node-trigger-arcs test-node-2))))
   (do-actions arc))
 
-
-(let ((arc (first (node-arcs test-node-3))))
+(let ((arc (first (node-trigger-arcs test-node-3))))
   (do-actions arc))
+
+;(let ((arc (first (node-trigger-arcs test-node-4))))
+;  (do-actions arc))
+
+
+
+
