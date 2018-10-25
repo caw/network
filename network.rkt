@@ -4,11 +4,13 @@
            current-node-name
            db-set!
            db-data
+           timer
            handle-tick
            handle-event
            logging
-           narrate)
-  
+           narrate
+           bind-gui)
+
 
   (struct node  (string-name timeout timeout-arc trigger-arcs) #:transparent)
   (struct arc (name trigger actions destination) #:transparent)
@@ -21,6 +23,9 @@
   (define (current-node-name)
     (node-string-name current-node))
 
+  (define gui #f)
+  (define (bind-gui gui)
+    (set! gui gui))
   (define (logging str)
     (display (string-append "<< " str " >>\n")))
 
@@ -49,14 +54,13 @@
     (and (has-timeout? node) (>= time-in-current-node (node-timeout node))))
 
   (define (end-node? node)
-    (eq? (node-timeout node) 'end-node))
+    (eq? (substring (node-string-name node) 0 1) "en" ))
 
   (define timer (new timer%
                      [notify-callback (lambda ()
-                                     
                                         (handle-tick))]
                      [interval #f]))
-
+ 
   (define (handle-tick)
     (set! sim-running-time (+ sim-running-time 1))
     (set! time-in-current-node (+ time-in-current-node 1))
@@ -83,11 +87,13 @@
   (define (handle-event event)
     (when (has-trigger-arcs? current-node)
       (case event
-        ['tick (display "handling tick event")]
+        ['tick (display "handling tick as an arc trigger")]
         [else
          (let* ([arcs (node-trigger-arcs current-node)]
                 [matching-arc (filter (lambda (a) (eq? (arc-trigger a) event)) arcs)])
            (when (not (null? matching-arc))
+             (when (> (length matching-arc) 1)
+               (logging "More than one arc matched"))
              (let ([match (car matching-arc)])
                (logging (symbol->string event))
                (let ([actions (arc-actions match)])
@@ -107,7 +113,7 @@
     (syntax-case stx (end-node timeout: timeout-arc: trigger-arcs:)
       ; end node
       [(_  name end-node string-name)
-       #'(define name (node string-name 'end-node #f #f))]
+       #'(define name (node string-name #f #f #f))]
       ; timeout arc, but no trigger arcs
       [(_  name string-name timeout: timeout timeout-arc: arc0)
        #'(define name (node string-name timeout (define-arc arc0) #f))]
