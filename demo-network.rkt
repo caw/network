@@ -26,6 +26,7 @@
   timeout: 2
   timeout-arc: ('a-test 'trig do: ((logging "test-node-4-timeout, going to test-node-5 (an end-node)") (narrate h3)) to: test-node-5))
 
+;; end node
 (define-node test-node-5 end-node)
  
 (set-current-node! test-node-4)
