@@ -1,14 +1,14 @@
 (module network racket/gui
   (provide define-node
            set-current-node!
-           current-node
+           current-node-name
            handle-tick
            handle-event
            logging
            narrate)
   
 
-  (struct node  (timeout timeout-arc trigger-arcs) #:transparent)
+  (struct node  (string-name timeout timeout-arc trigger-arcs) #:transparent)
   (struct arc (name trigger actions destination) #:transparent)
 
   (define sim-running-time 0)
@@ -16,6 +16,8 @@
   (define current-node #f)
   (define (set-current-node! node)
     (set! current-node node))
+  (define (current-node-name)
+    (node-string-name current-node))
 
   (define (logging str)
     (display (string-append "<< " str " >>\n")))
@@ -43,7 +45,7 @@
     (and (has-timeout? node) (>= time-in-current-node (node-timeout node))))
 
   (define (end-node? node)
-    (eq? node 'end-node))
+    (eq? (node-timeout node) 'end-node))
 
   (define timer (new timer%
                      [notify-callback (lambda ()
@@ -100,17 +102,17 @@
   (define-syntax (define-node stx)
     (syntax-case stx (end-node timeout: timeout-arc: trigger-arcs:)
       ; end node
-      [(_  name end-node)
-       #'(define name 'end-node)]
+      [(_  name end-node string-name)
+       #'(define name (node string-name 'end-node #f #f))]
       ; timeout arc, but no trigger arcs
-      [(_  name timeout: timeout timeout-arc: arc0)
-       #'(define name (node timeout (define-arc arc0) #f))]
+      [(_  name string-name timeout: timeout timeout-arc: arc0)
+       #'(define name (node string-name timeout (define-arc arc0) #f))]
       ; no timeout, but trigger arcs
-      [(_  name trigger-arcs: (arc1 ...))
-       #'(define name (node #f #f (list (define-arc arc1)... )))]
+      [(_  name string-name trigger-arcs: (arc1 ...))
+       #'(define name (node string-name #f #f (list (define-arc arc1)... )))]
       ; both timeout and trigger arcs
-      [(_  name timeout: timeout timeout-arc: arc0 trigger-arcs: (arc1 ...))
-       #'(define name (node timeout (define-arc arc0) (list (define-arc arc1)... )))]))
+      [(_  name string-name timeout: timeout timeout-arc: arc0 trigger-arcs: (arc1 ...))
+       #'(define name (node string-name timeout (define-arc arc0) (list (define-arc arc1)... )))]))
 
    
   )
