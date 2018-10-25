@@ -1,7 +1,5 @@
 #lang racket/gui
-
-(require "network.rkt" "user-data.rkt")
-
+(require "network.rkt")
 (define frame (new frame%
                    [label "Example"]
                    [width 800]
@@ -31,14 +29,17 @@
      [parent frame]
      [label "Stop"]
      [callback (lambda (button event)
-                 (send timer stop))])
+                   (send timer stop))])
 
-(send frame show #t)
 
 (define timer (new timer%
                    [notify-callback (lambda ()
-                                      (handle-tick))]
+                                      (unless (network-finished?)
+                                        (handle-tick)))]
                    [interval #f]))
 
-(set-current-node! test-node-1)
+(send frame show #t)
+
+
+
 

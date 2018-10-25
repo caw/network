@@ -1,12 +1,14 @@
 (module user-data racket
- ; (require "network.rkt")
-  (require "nodes.rkt")
-  (provide h1 h2 h3)
-  (provide test-node-1
+  (require "utilities.rkt")
+  (provide h1
+           h2
+           h3
+           test-node-1
            test-node-2
            test-node-3
            test-node-4
-           test-node-5)
+           test-node-5
+           start-node)
  
   (define h1 #<<;
 You've just arrived in Ward 3W, respoinding to a call
@@ -33,10 +35,6 @@ penicillin
 
 ;
     )
-;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;; INSTEAD OF EVENTS, WE SCHEDULE THE EVENTS ONTO A AGENDA
-;;;;;;;;;;;;;;;;;;;;;;;; (schedule 'logging (param-list) now (or 15 secs or whatever))
-;;;;;;;;;;;;;;;;;;;;;;;;
 
   ;; node with timeout and trigger arcs
   (define-node test-node-1
@@ -57,7 +55,7 @@ penicillin
   (define-node test-node-3
     "tn-3"
     timeout: 3
-    timeout-arc: ('a-test 'trig do: ((logging "test-node-3-timeout, going to test-node-1") (narrate h3)) to: test-node-4)
+    timeout-arc: ('a-test 'trig do: ((logging "test-node-3-timeout, going to test-node-4") (narrate h3)) to: test-node-4)
     trigger-arcs: (('a1 'exam do:  ((logging "got exam, going to test-node-4") (narrate h1)) to: test-node-4)
                    ('a2 'fever do: ((db-set! 'temp 100) (db-set! 'hr 180) (db-set! 'bp 75)) to: test-node-3)))
 
@@ -69,6 +67,6 @@ penicillin
 
   ;; end node
   (define-node test-node-5 end-node "en-1")
-
-  (set-current-node! test-node-1)
+  (define (start-node)
+    test-node-1)
   )
