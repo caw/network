@@ -1,13 +1,13 @@
 #lang racket/gui
 
-(require "network.rkt")
+(require "network.rkt" "user-data.rkt")
 
 
 
 (define frame (new frame% [label "Example"]))
 (define sim-time (new message%
-                 [parent frame]
-                 [label "not started"]))
+                      [parent frame]
+                      [label "not started"]))
 (define current-node (new message%
                           [parent frame]
                           [label "No node"]))
@@ -16,16 +16,26 @@
      [parent frame]
      [label "Examination"]
      [callback (lambda (button event)
-                 (send sim-time set-label "Button click"))])
+                 (handle-event 'exam))])
 
 (new button%
      [parent frame]
      [label "Start"]
      [callback (lambda (button event)
-                 (display "this will start the sim"))])
+                 (send timer start 1000))])
+
+(new button%
+     [parent frame]
+     [label "Stop"]
+     [callback (lambda (button event)
+                 (send timer stop))])
 
 (send frame show #t)
-(let ((msg "42")
-      (target sim-time))
-  
-(send target set-label msg))
+
+(define timer (new timer%
+                   [notify-callback (lambda ()
+                                      (handle-tick))]
+                   [interval #f]))
+
+(set-current-node! test-node-1)
+

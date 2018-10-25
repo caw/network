@@ -4,7 +4,7 @@
            current-node-name
            db-set!
            db-data
-           timer
+        ;   timer
            handle-tick
            handle-event
            logging
@@ -57,10 +57,7 @@
   (define (end-node? node)
     (eq? (substring (node-string-name node) 0 1) "en" ))
 
-  (define timer (new timer%
-                     [notify-callback (lambda ()
-                                        (handle-tick))]
-                     [interval #f]))
+
  
   (define (handle-tick)
     (set! sim-running-time (+ sim-running-time 1))
@@ -72,7 +69,8 @@
       [(end-node? current-node)
        (begin
          (logging "End-node reached")
-         (send timer stop))]
+       ;  (send timer stop)
+         )]
       [(timed-out? current-node)
        (let* ([arc (node-timeout-arc current-node)]
               [actions (arc-actions arc)]
