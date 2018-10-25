@@ -1,5 +1,6 @@
 (module user-data racket
-  (require "network.rkt")
+ ; (require "network.rkt")
+  (require "nodes.rkt")
   (provide h1 h2 h3)
   (provide test-node-1
            test-node-2
@@ -7,7 +8,6 @@
            test-node-4
            test-node-5)
  
-
   (define h1 #<<;
 You've just arrived in Ward 3W, respoinding to a call
 from the nurse looking after Ms Jones:
@@ -33,12 +33,16 @@ penicillin
 
 ;
     )
+;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;; INSTEAD OF EVENTS, WE SCHEDULE THE EVENTS ONTO A AGENDA
+;;;;;;;;;;;;;;;;;;;;;;;; (schedule 'logging (param-list) now (or 15 secs or whatever))
+;;;;;;;;;;;;;;;;;;;;;;;;
 
   ;; node with timeout and trigger arcs
   (define-node test-node-1
     "tn-1"
     timeout: 5
-    timeout-arc: ('a-test 'trig do: ((logging "test-node-1-timeout, going to test-node-3") (narrate h3)) to: test-node-3)
+    timeout-arc: ('a-test 'trig do:  ((logging "test-node-1-timeout, going to test-node-3") (narrate h3)) to: test-node-3)
     trigger-arcs: (('a1 'exam do:  ((logging "got exam, going to test-node-3") (narrate h1)) to: test-node-3)
                    ('a2 'history do: ((logging "got history, looping back to test-node-1") (narrate h3)) to: test-node-1)))
 

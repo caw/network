@@ -2,12 +2,15 @@
 
 (require "network.rkt" "user-data.rkt")
 
+(define frame (new frame%
+                   [label "Example"]
+                   [width 800]
+                   [height 600]))
 
-
-(define frame (new frame% [label "Example"]))
 (define sim-time (new message%
                       [parent frame]
                       [label "not started"]))
+
 (define current-node (new message%
                           [parent frame]
                           [label "No node"]))
