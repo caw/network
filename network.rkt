@@ -2,6 +2,8 @@
   (provide define-node
            set-current-node!
            current-node-name
+           db-set!
+           db-data
            handle-tick
            handle-event
            logging
@@ -34,6 +36,8 @@
     (hash-set! db key value))
   (define (db-get key)
     (hash-ref db key))
+  (define (db-data)
+    (display db))
 
   (define (has-timeout? node)
     (node-timeout node))

@@ -22,7 +22,8 @@
   "tn-3"
   timeout: 3
   timeout-arc: ('a-test 'trig do: ((logging "test-node-3-timeout, going to test-node-1") (narrate h3)) to: test-node-1)
-  trigger-arcs: (('a1 'exam do:  ((logging "got exam, going to test-node-4") (narrate h1)) to: test-node-4)))
+  trigger-arcs: (('a1 'exam do:  ((logging "got exam, going to test-node-4") (narrate h1)) to: test-node-4)
+                 ('a2 'fever do: ((db-set! 'temp 100) (db-set! 'hr 180) (db-set! 'bp 75)) to: test-node-3)))
 
 ;; node with timeout arc and no trigger arcs
 (define-node test-node-4
@@ -31,6 +32,6 @@
   timeout-arc: ('a-test 'trig do: ((logging "test-node-4-timeout, going to test-node-5 (an end-node)") (narrate h3)) to: test-node-5))
 
 ;; end node
-(define-node test-node-5 'end-node)
+(define-node test-node-5 end-node "en-1")
  
 (set-current-node! test-node-1)
