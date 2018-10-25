@@ -26,6 +26,7 @@
   (define gui #f)
   (define (bind-gui gui)
     (set! gui gui))
+  
   (define (logging str)
     (display (string-append "<< " str " >>\n")))
 
